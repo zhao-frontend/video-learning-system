@@ -1,70 +1,4 @@
 
-/* ============================================================
-知影学堂 H5 视频学习平台
-单文件实现：分类浏览 / 搜索 / 自定义播放器
-进度记录 / 接续播放 / 已学未学 / 点赞收藏评论
-============================================================ */
-
-
-
-
-/* ============================================================
-API 配置 —— 已按项目后端 request.post + 原生 SQL 模式对接
-============================================================
-- 查询走 mysql/getDataListBySql.jsp
-- 增删改走 mysql/updateInfo.jsp
-- 配置 { noVerify: true, noAuth: true } 与项目其他模块一致
-- userid / username 从项目全局上下文读取
-
-课程主表复用项目已有的 video_learn 表，字段：
-id                主键（假设列名为 id，如不一致改下面 getCourses 即可）
-video_title       标题
-video_description 详情
-updfiles_video    视频地址
-video_banner      封面图
-video_replays     播放量
-
-互动相关的表（实际表名以用户确认为准）：
-
--- 学习进度
-CREATE TABLE test_table_video_learn_progress (
-user_id      VARCHAR(50)   NOT NULL,
-video_id     VARCHAR(32)   NOT NULL,
-cur_time     DECIMAL(10,2) DEFAULT 0,
-duration     DECIMAL(10,2) DEFAULT 0,
-completed    TINYINT       DEFAULT 0,
-updated_at   DATETIME      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-PRIMARY KEY (user_id, video_id)
-);
-
--- 点赞记录
-CREATE TABLE test_table_video_learn_likes (
-user_id   VARCHAR(50) NOT NULL,
-video_id  VARCHAR(32) NOT NULL,
-PRIMARY KEY (user_id, video_id)
-);
-
--- 收藏记录
-CREATE TABLE test_table_video_learn_favs (
-user_id   VARCHAR(50) NOT NULL,
-video_id  VARCHAR(32) NOT NULL,
-PRIMARY KEY (user_id, video_id)
-);
-
--- 评论（fav_id 存评论内容，平台自动添加 Id 主键列）
-CREATE TABLE test_table_video_learn_comms (
-user_id   VARCHAR(50)   NOT NULL,
-video_id  VARCHAR(32)   NOT NULL,
-fav_id    VARCHAR(1000) NOT NULL
-);
-
--- 评论点赞记录（comm_id 引用评论的 Id 主键）
-CREATE TABLE test_table_video_learn_comms_likes (
-user_id  VARCHAR(50) NOT NULL,
-comm_id  VARCHAR(32) NOT NULL,
-PRIMARY KEY (user_id, comm_id)
-);
-*/
 
 
 // —— 工具：从全局获取当前用户身份 ——
@@ -146,7 +80,7 @@ const API = {
   },
   // —— 底层：原生 SQL 查询/执行 ——
   _normSql(sql) {
-    // wiidu JSP 不支持多行 SQL，折叠所有换行和多余空格
+  
     return String(sql).replace(/\s+/g, ' ').trim();
   },
   async _query(sql) {
@@ -195,7 +129,7 @@ const API = {
     // mode:no-cors 让浏览器接受 opaque 响应而不抛 CORS 错误
     // 这样即使 updateInfo.jsp 没有 Access-Control-Allow-Origin 头也能正常写入
     try {
-      await fetch("https://www.wiidu.com.cn/zx/datainf/mysql/updateInfo.jsp", {
+      await fetch("https://www.mock", {
         method: "POST",
         mode: "no-cors",
         credentials: "include",
@@ -235,7 +169,7 @@ const API = {
       const name = String(val).split(',').map(s => s.trim()).filter(Boolean)[0];
       if (!name) return '';
       if (/^https?:\/\//.test(name)) return name;
-      return 'https://www.wiidu.com.cn/zx/fileuploaded/' + name;
+      return 'https://www.mock' + name;
     };
     return rows.map((r) => ({
       id: String(r[this._idCol]),
@@ -1638,7 +1572,7 @@ async function reload() {
     let uid = getUserId()
     console.log(uid)
     $('#backToQuizBtn').on('click', function () {
-      window.location.replace(`https://www.wiidu.com.cn/zx/customForm/mp.html?a=1&tblname=custom_quiz_site&R=36707.02288477307&userid=${btoa(uid)}`)
+      window.location.replace(`https://www.mock?a=1&tblname=custom_quiz_site&R=36707.02288477307&userid=${btoa(uid)}`)
     })
     COURSES = courses;
     state.progress = progress;
