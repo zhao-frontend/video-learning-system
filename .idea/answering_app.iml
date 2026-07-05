@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="A0.11237483363668022" level="application" />
+    <orderEntry type="library" name="A0.1997480011744922" level="application" />
+    <orderEntry type="library" name="A0.2461088004016425" level="application" />
+    <orderEntry type="library" name="A0.6859845639269762" level="application" />
+    <orderEntry type="library" name="A0.761849098450233" level="application" />
+    <orderEntry type="library" name="A0.020986513862042755" level="application" />
+    <orderEntry type="library" name="A0.7876153114745368" level="application" />
+    <orderEntry type="library" name="A0.5973806465055889" level="application" />
+    <orderEntry type="library" name="A0.040775726288350134" level="application" />
+    <orderEntry type="library" name="A0.3268610736835832" level="application" />
+  </component>
+</module>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>信息填写</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      background: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .back-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #333;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      flex: 1;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 14px;
+      color: #FF8C00;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .header-actions span { cursor: pointer; }
+
+    /* ── Scrollable body ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 90px;
+    }
+
+    /* ── Avatar field (同行式布局) ── */
+    .avatar-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #eee;
+      display: block;
+    }
+
+    .avatar-placeholder {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Form fields ── */
+    .form-section { margin-top: 10px; }
+
+    .form-field {
+      display: flex;
+      align-items: center;
+      padding: 17px 16px;
+      border-bottom: 1px solid #f2f2f2;
+      background: #fff;
+    }
+
+    .field-label {
+      font-size: 15px;
+      color: #1a1a1a;
+      min-width: 76px;
+      flex-shrink: 0;
+    }
+
+    .field-label.req { color: #FF8C00; }
+
+    .field-input {
+      flex: 1;
+      text-align: right;
+      font-size: 15px;
+      color: #1a1a1a;
+      border: none;
+      outline: none;
+      background: transparent;
+      min-width: 0;
+    }
+
+    .field-input::placeholder { color: #ccc; }
+
+    .field-arrow {
+      color: #ccc;
+      margin-left: 6px;
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    /* ── Submit ── */
+    .submit-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      padding: 10px 16px 20px;
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px 0;
+      background: #FF8C00;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 2px;
+    }
+
+    .submit-btn:disabled {
+      background: #ffd199;
+      cursor: not-allowed;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.72);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 9999;
+      display: none;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="back-btn" onclick="history.back()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </div>
+    <div class="header-title">个人信息</div>
+    <div class="header-actions">
+      <span>预览</span>
+      <span>分享</span>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Form -->
+    <div class="form-section">
+
+      <!-- 头像行 -->
+      <div class="form-field" style="cursor:pointer" onclick="document.getElementById('picInput').click()">
+        <span class="field-label">个人头像</span>
+        <div style="flex:1;display:flex;justify-content:flex-end;align-items:center;gap:8px">
+          <div class="avatar-placeholder" id="avatarPlaceholder">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4" fill="#ccc"/>
+              <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="#ccc"/>
+            </svg>
+          </div>
+          <img id="photoPreview" class="avatar-thumb" alt="头像" style="display:none">
+        </div>
+        <span class="field-arrow">›</span>
+      </div>
+      <input type="file" id="picInput" accept="image/*" style="display:none">
+
+      <div class="form-field">
+        <span class="field-label">姓名</span>
+        <input class="field-input" type="text" id="f_name" placeholder="请输入姓名">
+      </div>
+
+      <div class="form-field">
+        <span class="field-label">老家</span>
+        <input class="field-input" type="text" id="f_homeland" placeholder="请输入老家">
+      </div>
+
+      <div class="form-field">
+        <span class="field-label req">服务类型</span>
+        <input class="field-input" type="text" id="f_type" placeholder="请输入服务类型">
+      </div>
+
+      <div class="form-field">
+        <span class="field-label">服务地点</span>
+        <input class="field-input" type="text" id="f_location" placeholder="请输入服务地点">
+      </div>
+
+      <div class="form-field" style="cursor:pointer" onclick="triggerDatePicker()">
+        <span class="field-label">服务时间</span>
+        <span id="f_time_display" class="field-input" style="color:#ccc"></span>
+        <input type="date" id="f_time" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0"
+               onchange="onDateChange(this.value)">
+        <span class="field-arrow">›</span>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Submit -->
+  <div class="submit-wrap">
+    <button class="submit-btn" id="submitBtn" onclick="doSubmit()">提 交</button>
+  </div>
+
+</div><!-- /app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var BASE    = 'https://www.wiidu.com.cn/zx/datainf/mysql/';
+  var MAX_LEN = 7000;
+  var pendingBase64 = null;
+
+  var params   = new URLSearchParams(location.search);
+  var userid   = parseInt(params.get('userid'), 10) || 0;
+  var recordId = params.get('recordid') || '';
+
+  if (recordId) loadRecord();
+
+  /* ── Image selection ── */
+  document.getElementById('picInput').addEventListener('change', function () {
+    var file = this.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('请选择图片文件'); return; }
+
+    showToast('处理中…', 10000);
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var img = new Image();
+      img.onload = function () {
+        var result = compress(img);
+        if (!result) { showToast('图片过大，请换一张或裁剪后重试'); return; }
+        pendingBase64 = result.b64;
+        setPreview(result.b64, result.w, result.h, result.kb);
+        showToast('图片已选择 ✓');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function setPreview(src, w, h, kb) {
+    var prev = document.getElementById('photoPreview');
+    prev.src = src;
+    prev.style.display = 'block';
+    document.getElementById('avatarPlaceholder').style.display = 'none';
+  }
+
+  /**
+   * 保留原始宽高比压缩图片：
+   *   1. 最长边从 MAX_SIDE 开始，等比缩放
+   *   2. 先以较小步长降低质量（0.85 → 0.10）
+   *   3. 若仍超限，将分辨率缩小 15% 后重试
+   *   4. 返回 { b64, w, h, kb } 或 null
+   */
+  function compress(img) {
+    var MAX      = 7000;   // base64 字符数上限（updateInfo.jsp SQL 总长约 7750）
+    var MAX_SIDE = 600;    // 最长边初始像素（会自动降级）
+    var MIN_SIDE = 40;     // 最小允许边长
+
+    // 等比缩放：最长边不超过 MAX_SIDE
+    var ratio = img.width / img.height;
+    var w, h;
+    if (img.width >= img.height) {
+      w = Math.min(img.width, MAX_SIDE);
+      h = Math.round(w / ratio);
+    } else {
+      h = Math.min(img.height, MAX_SIDE);
+      w = Math.round(h * ratio);
+    }
+
+    function draw(cw, ch) {
+      var c = document.createElement('canvas');
+      c.width = cw; c.height = ch;
+      c.getContext('2d').drawImage(img, 0, 0, cw, ch);
+      return c;
+    }
+
+    var b64, q, canvas;
+
+    // 外循环：逐步降低分辨率，直到找到满足大小限制的组合
+    while (w >= MIN_SIDE && h >= MIN_SIDE) {
+      canvas = draw(w, h);
+      // 内循环：在当前分辨率下从高质量到低质量尝试
+      for (q = 0.85; q >= 0.10; q -= 0.05) {
+        b64 = canvas.toDataURL('image/jpeg', +q.toFixed(2));
+        if (b64.length <= MAX) {
+          var kb = Math.round(b64.length * 0.75 / 1024); // base64 → 近似 KB
+          return { b64: b64, w: w, h: h, kb: kb };
+        }
+      }
+      // 此分辨率下最低质量仍超限 → 缩小分辨率 15%
+      w = Math.max(MIN_SIDE, Math.round(w * 0.85));
+      h = Math.max(MIN_SIDE, Math.round(h * 0.85));
+    }
+    return null;
+  }
+
+  /* ── Date formatting ── */
+  /* ── 服务时间 ── */
+  function triggerDatePicker() {
+    var el = document.getElementById('f_time');
+    if (el.showPicker) { el.showPicker(); } else { el.click(); }
+  }
+
+  function onDateChange(val) {
+    if (!val) return;
+    var p = val.split('-');
+    var display = p[0] + '年' + parseInt(p[1]) + '月' + parseInt(p[2]) + '日';
+    var span = document.getElementById('f_time_display');
+    span.textContent = display;
+    span.style.color = '#1a1a1a';
+  }
+
+  /* ── Backend helpers ── */
+  // updateInfo.jsp：无 CORS 头，用 no-cors 模式发送，响应不可读，SQL 会执行
+  function writeJsp(sql) {
+    return fetch(BASE + 'updateInfo.jsp', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: JSON.stringify({ sqlstring: [sql] })
+    });
+  }
+
+  // getDataListBySql.jsp：有 CORS 头，必须用 text/plain（避免 preflight 失败）
+  async function readJsp(sqls) {
+    var r = await fetch(BASE + 'getDataListBySql.jsp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ sqlstring: sqls })
+    });
+    return r.json();
+  }
+
+  function escSql(s) {
+    return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  }
+
+  /* ── Fill form fields from a row object ── */
+  function fillForm(row) {
+    document.getElementById('f_name').value     = row.member_name     || '';
+    document.getElementById('f_homeland').value = row.member_homeland || '';
+    document.getElementById('f_type').value     = row.member_type     || '';
+    document.getElementById('f_location').value = row.member_location || '';
+    var t = row.member_time || '';
+    document.getElementById('f_time').value = t;
+    if (t) onDateChange(t);
+    if (row.member_pic) {
+      pendingBase64 = row.member_pic;
+      setPreview(row.member_pic);
+    }
+  }
+
+  /* ── Load existing record by recordId (edit mode via URL param) ── */
+  async function loadRecord() {
+    try {
+      var res = await readJsp([
+        'SELECT * FROM test_table_verify_sheet WHERE Id = ' + parseInt(recordId) + ' LIMIT 1'
+      ]);
+      var row = (res.data[0] || [])[0];
+      if (row) fillForm(row);
+    } catch (e) {
+      showToast('加载数据失败');
+    }
+  }
+
+  /* ── Submit ── */
+  async function doSubmit() {
+    var name     = document.getElementById('f_name').value.trim();
+    var homeland = document.getElementById('f_homeland').value.trim();
+    var type     = document.getElementById('f_type').value.trim();
+    var location = document.getElementById('f_location').value.trim();
+    var time     = document.getElementById('f_time').value.trim();
+    var pic      = pendingBase64 || '';
+
+    if (!name) { showToast('请输入姓名'); return; }
+    if (!type) { showToast('请选择服务类型'); return; }
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '提交中…';
+
+    try {
+      var sql;
+      var isInsert = !recordId;
+      if (recordId) {
+        sql = "UPDATE test_table_verify_sheet SET"
+            + " member_name='"      + escSql(name)     + "'"
+            + ", member_pic='"      + escSql(pic)      + "'"
+            + ", member_homeland='" + escSql(homeland) + "'"
+            + ", member_type='"     + escSql(type)     + "'"
+            + ", member_location='" + escSql(location) + "'"
+            + ", member_time='"     + escSql(time)     + "'"
+            + " WHERE Id="          + parseInt(recordId);
+      } else {
+        sql = "INSERT INTO test_table_verify_sheet"
+            + " (member_name, member_pic, member_homeland, member_type, member_location, member_time)"
+            + " VALUES ("
+            + "'"  + escSql(name)     + "'"
+            + ", '" + escSql(pic)      + "'"
+            + ", '" + escSql(homeland) + "'"
+            + ", '" + escSql(type)     + "'"
+            + ", '" + escSql(location) + "'"
+            + ", '" + escSql(time)     + "'"
+            + ")";
+      }
+
+      await writeJsp(sql);
+
+      // 写入后回查验证（INSERT 和 UPDATE 均走此路径）
+      await new Promise(function (r) { setTimeout(r, 500); });
+      var verifySql = recordId
+        ? 'SELECT Id FROM test_table_verify_sheet WHERE Id=' + parseInt(recordId) + ' LIMIT 1'
+        : "SELECT Id FROM test_table_verify_sheet WHERE member_name='" + escSql(name)
+          + "' AND member_type='" + escSql(type) + "' ORDER BY Id DESC LIMIT 1";
+      var writeOk = false;
+      try {
+        var verify = await readJsp([verifySql]);
+        var confirmed = (verify.data[0] || [])[0];
+        if (confirmed) {
+          writeOk = true;
+          if (isInsert) recordId = String(confirmed.Id);
+        }
+      } catch (e) { /* 网络抖动，乐观处理 */ writeOk = true; }
+
+      if (writeOk) {
+        showToast(isInsert ? '提交成功 ✓' : '修改成功 ✓');
+      } else {
+        showToast('写入失败，请检查网络后重试');
+        btn.disabled = false;
+        btn.textContent = '提 交';
+        return;
+      }
+      setTimeout(function () {
+        btn.disabled = false;
+        btn.textContent = '提 交';
+      }, 2000);
+    } catch (e) {
+      showToast('网络错误，请重试');
+      btn.disabled = false;
+      btn.textContent = '提 交';
+    }
+  }
+
+  /* ── Toast ── */
+  var _toastTimer = null;
+  function showToast(msg, ms) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.display = 'block';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function () { el.style.display = 'none'; }, ms || 2000);
+  }
+</script>
+</body>
+</html>

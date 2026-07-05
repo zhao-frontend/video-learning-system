@@ -1,0 +1,603 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>知影学堂 · 视频学习平台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@500;600;700;900&display=swap"
+        rel="stylesheet" />
+    <script src="tailwindcss.js"></script>
+    <script src="iconify-icon.min.js"></script>
+    <script src="jquery.min.js"></script>
+</head>
+<style>
+    @import "https://www.wiidu.com.cn/zx/fileuploaded/A0.01638769791095851.css";
+    html {
+        font-size: inherit !important;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: #f8fafc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        text-align: initial;
+        overflow: hidden;
+    }
+
+
+    .phone-container {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        left: 50%;
+        transform: translate(-50%, 0);
+    }
+
+    .phone-screen {
+        width: 100%;
+        height: 100vh;
+        overflow-y: hidden;
+        overflow-x: hidden;
+        padding-bottom: 80px;
+        scrollbar-width: none;
+    }
+
+    @media screen and (min-width: 768px) and (min-height: 480px) {
+        .phone-container {
+            height: 100vh;
+            width: auto;
+            aspect-ratio: 3/4;
+        }
+    }
+
+    .phone-screen::-webkit-scrollbar {
+        display: none;
+    }
+
+    .view {
+        display: none;
+        animation: fadeIn 0.3s ease-in-out;
+        overflow: auto;
+        height: 100vh;
+    }
+
+    .view.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .custom-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: #e2e8f0 transparent;
+    }
+
+    .nav-item.active {
+        color: #2563eb;
+    }
+
+    .option-card.selected {
+        border-color: #2563eb;
+        background-color: #eff6ff;
+    }
+    .rthumb {
+        background-size: cover;
+        background-position: center center;
+    }
+
+    .nav {
+        .on {
+            color: #155dfc;
+        }
+    }
+
+    .actions .on {
+        color: #155dfc
+    }
+
+    .clike {
+        &.on {
+            color: #155dfc;
+        }
+    }
+
+    /* error state */
+    .error-state p {
+        font-size: 13px;
+        margin-bottom: 16px;
+        color: #0a0a0a;
+        line-height: 1.6;
+    }
+
+    .retry-btn {
+        background: #155dfc;
+        color: #fff;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        /*font-family: "Noto Sans SC";*/
+        transition: 0.2s;
+    }
+
+    .retry-btn:hover {
+        background: #162456;
+    }
+
+
+    /* ===== Player view ===== */
+    .pback button {
+        background: none;
+        border: none;
+        /*color: var(--cream);*/
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        cursor: pointer;
+        /*font-family: "Noto Sans SC";*/
+    }
+
+    .player-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 30px;
+    }
+
+    .player-scroll::-webkit-scrollbar {
+        width: 0;
+    }
+
+    /* video + controls */
+    .player-wrap {
+        position: relative;
+        width: 100%;
+        background: #000;
+        aspect-ratio: 16/9;
+        overflow: hidden;
+        user-select: none;
+    }
+
+    .player-wrap.fs-active {
+        aspect-ratio: auto;
+        height: 100vh;
+        width: 100vw;
+    }
+
+    .player-wrap video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        background: #000;
+    }
+
+    .big-play {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .big-play span {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .player-wrap.playing .big-play {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .loading {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loading.show {
+        display: flex;
+    }
+
+    .spinner {
+        width: 38px;
+        height: 38px;
+        border: 3px solid rgba(255, 255, 255, 0.25);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .controls {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 24px 14px 12px;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
+        transition: opacity 0.3s;
+        z-index: 5;
+    }
+
+    .player-wrap.hide-ui .controls {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .player-wrap.hide-ui {
+        cursor: none;
+    }
+
+    .progress {
+        height: 18px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        touch-action: none;
+    }
+
+    .progress .track {
+        position: relative;
+        height: 5px;
+        width: 100%;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .progress .buffered {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.35);
+        border-radius: 5px;
+    }
+
+    .progress .played {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        background: #155dfc;
+        border-radius: 5px;
+    }
+
+    .progress .thumb-dot {
+        position: absolute;
+        top: 50%;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #fff;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        transition: transform 0.15s;
+    }
+
+    .progress:active .thumb-dot,
+    .progress:hover .thumb-dot {
+        transform: translate(-50%, -50%) scale(1.25);
+    }
+
+    .ctrl-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 8px;
+    }
+
+    .ctrl-row button {
+        background: none;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .ctrl-row .time {
+        font-size: 12px;
+        /*font-family: "Fraunces", serif;*/
+        letter-spacing: 0.5px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .ctrl-row .sp {
+        flex: 1;
+    }
+
+    .speed-btn {
+        font-size: 13px;
+        font-weight: 700;
+        /*font-family: "Fraunces", serif;*/
+        padding: 3px 8px;
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.16) !important;
+    }
+
+    .speed-menu {
+        position: absolute;
+        right: 14px;
+        bottom: 58px;
+        background: rgba(20, 16, 9, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 6px;
+        display: none;
+        z-index: 8;
+        backdrop-filter: blur(8px);
+    }
+
+    .speed-menu.show {
+        display: block;
+    }
+
+    .speed-menu button {
+        display: block;
+        width: 100%;
+        text-align: center;
+        color: #fff;
+        background: none;
+        border: none;
+        padding: 8px 22px;
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 8px;
+        font-family: "Noto Sans SC";
+    }
+
+    .speed-menu button.on {
+        background: #155dfc;
+        font-weight: 700;
+    }
+
+    .resume-toast {
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(20, 16, 9, 0.92);
+        color: #fff;
+        font-size: 12px;
+        padding: 8px 16px;
+        border-radius: 30px;
+        z-index: 9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transition: 0.4s;
+        pointer-events: none;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .resume-toast.show {
+        opacity: 1;
+    }
+
+    .resume-toast b {
+        color: #fe9a00;
+    }
+</style>
+
+<body>
+<div class="phone-screen">
+    <div class="frame phone-container">
+        <!-- ============ LIST VIEW ============ -->
+        <section class="view active pt-0 bg-white pb-12" id="list">
+            <header class="top p-4 pb-2 pt-2 w-full sticky top-0 right-0 bg-white border-b-[1px] border-slate-200">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs text-slate-400">知影学堂</span>
+                    <button id="backToQuizBtn" class="text-xs text-slate-500 flex items-center gap-1 py-0.5">
+                        <iconify-icon icon="material-symbols:quiz" class="text-base"></iconify-icon>
+                        返回答题
+                    </button>
+                </div>
+                <div class="flex flex-col">
+                    <div class="flex-1 search bg-neutral-100 rounded-full flex items-center py-2 px-4 mt-1">
+                        <iconify-icon icon="lucide:search" class="text-lg"></iconify-icon>
+                        <input class="bg-neutral-100 text-base flex-1 mx-2" id="search" type="text"
+                               placeholder="搜索视频名称、知识点…"/>
+                        <span class="clear h-[18px]" id="clearSearch"><iconify-icon class="text-lg"
+                                                                                    icon="lucide:x"></iconify-icon></span>
+                    </div>
+                </div>
+
+                <div class="chips top-0 sticky py-4 gap-4 pb-0 mx-[-1rem] overflow-x-auto" id="chips"
+                     style="scrollbar-width: thin"></div>
+            </header>
+
+
+            <div class="scroll p-4 pt-0 pb-10" id="listScroll">
+                <div id="resumeSlot" class="cursor-pointer"></div>
+                <div class="sec-title py-2 flex justify-between items-center">
+                    <h3 id="listTitle" class="text-lg font-semibold">全部课程</h3>
+                    <span id="listCount" class="text-sm text-slate-400"></span>
+                </div>
+                <div class="list py-2 flex flex-col gap-4" id="videoList"></div>
+            </div>
+        </section>
+
+        <!-- ============ PLAYER VIEW ============ -->
+        <section class="view bg-white" id="player">
+            <div class="player-scroll" id="playerScroll">
+                <div class="pback px-2 py-4">
+                    <button id="backBtn" class="flex items-center text-sm">
+                        <iconify-icon class="text-xl text-slate" icon="lucide:chevron-left"></iconify-icon>
+                        <span class="text-xs">返回列表</span>
+                    </button>
+                </div>
+
+                <div class="player-wrap" id="playerWrap">
+                    <video id="video" playsinline preload="metadata"></video>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="big-play" id="bigPlay">
+            <span><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff">
+                <path d="M8 5v14l11-7z"/>
+              </svg></span>
+                    </div>
+                    <div class="resume-toast" id="resumeToast"></div>
+                    <div class="speed-menu" id="speedMenu"></div>
+                    <div class="controls" id="controls">
+                        <div class="progress" id="progress">
+                            <div class="track">
+                                <div class="buffered" id="buffered"></div>
+                                <div class="played" id="played"></div>
+                                <div class="thumb-dot" id="thumbDot"></div>
+                            </div>
+                        </div>
+                        <div class="ctrl-row">
+                            <button id="playPause">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </button>
+                            <span class="time" id="timeLabel">0:00 / 0:00</span>
+                            <span class="sp"></span>
+                            <button class="speed-btn" id="speedBtn">1.0×</button>
+                            <button id="fsBtn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff"
+                                     stroke-width="2"
+                                     stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pinfo p-4">
+                    <span class="pcat" id="pCat"></span>
+                    <h2 id="pTitle" class="text-lg font-semibold pb-1"></h2>
+                    <div class="pmeta text-sm" id="pMeta"></div>
+                    <div class="kps flex flex-wrap items-center gap-2 pt-2 pb-1" id="pKps"></div>
+                </div>
+
+                <div class="actions flex items-center justify-around">
+                    <div class="act like flex-1 flex flex-col items-center justify-center" id="likeBtn">
+                        <iconify-icon icon="mdi:like" class="text-xl"></iconify-icon>
+                        <span class="n text-sm" id="likeCount">0</span>
+                    </div>
+                    <div class="act fav flex-1 flex flex-col items-center justify-center" id="favBtn">
+                        <iconify-icon icon="uim:favorite" class="text-xl"></iconify-icon>
+                        <span class="n text-sm" id="favCount">0</span>
+                    </div>
+                    <div class="act share flex-1 hidden flex-col items-center justify-center"
+                         id="shareBtn">
+                        <svg
+                                width="22"
+                                height="22"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.8"
+                        >
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>
+                        </svg>
+                        <span class="n">分享</span>
+                    </div>
+                </div>
+
+                <div class="comments p-4 pb-12">
+                    <div class="chead pb-1 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">评论</h3>
+                        <span class="text-sm text-slate-600" id="commentCount"></span>
+                    </div>
+                    <div class="cbox">
+                        <!--                        <div class="av text-base">我</div>-->
+                        <div class="field text-right pb-2">
+                            <textarea class="resize-none text-xs w-full bg-slate-100 p-2 h-[100px] rounded-md" id="commentInput" rows="1"
+                                      placeholder="说点什么，与同学交流…"></textarea>
+                            <button class="send cursor-pointer bg-blue-600 text-base text-white font-semibold py-2 px-4 mt-1" id="commentSend"
+                                    disabled>
+                                发布
+                            </button>
+                        </div>
+                    </div>
+                    <div class="clist pb-12" id="commentList"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ FAVORITES VIEW (reuses list) ============ -->
+
+        <!-- bottom nav -->
+        <nav class="nav h-20 border-t border-slate-100 bg-white/80 backdrop-blur-md fixed bottom-0 left-0 w-full flex items-center justify-around"
+             id="nav" style="height: 5rem">
+            <button class="on text-[10px] flex-1 flex flex-col gap-1 items-center justify-center" data-tab="home">
+                <iconify-icon class="text-xl" icon="icon-park-outline:video"></iconify-icon>
+                课程
+            </button>
+            <button class="flex-1 text-[10px] flex-1 flex flex-col gap-1 items-center justify-center"
+                    data-tab="learning">
+                <iconify-icon class="text-xl" icon="entypo:progress-one"></iconify-icon>
+                学习中
+            </button>
+            <button class="flex-1 text-[10px] flex-1 flex flex-col gap-1 items-center justify-center" data-tab="fav">
+                <iconify-icon class="text-xl" icon="uim:favorite"></iconify-icon>
+                收藏
+            </button>
+            <button class="flex-1 text-[10px] flex-1 flex flex-col gap-1 items-center justify-center" data-tab="weekly">
+                <iconify-icon class="text-xl" icon="lucide:bar-chart-2"></iconify-icon>
+                周报
+            </button>
+        </nav>
+
+        <div class="toast" id="toast"></div>
+    </div>
+</div>
+
+    <!-- <script src="https://www.wiidu.com.cn/zx/fileuploaded/A0.3268610736835832.js"></script> -->
+    <!-- <script src="https://www.wiidu.com.cn/zx/fileuploaded/A0.11237483363668022.js"></script> -->
+    <script src="request.js"></script>
+    <script src="video_kernel.js"></script>
+</body>
+
+</html>

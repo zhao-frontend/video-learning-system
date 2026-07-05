@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>更换头像</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 20px;
+    }
+    .avatar-wrap {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 2px dashed #93c5fd;
+      background: #eff6ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .hint { font-size: 13px; color: #94a3b8; margin-bottom: 20px; }
+    .btn {
+      width: 100%;
+      max-width: 220px;
+      padding: 11px 0;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-upload { background: #2563eb; color: #fff; }
+    .btn-upload:disabled { background: #bfdbfe; cursor: not-allowed; }
+    .status {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #64748b;
+      text-align: center;
+      min-height: 20px;
+    }
+    .status.err { color: #ef4444; }
+    .status.ok  { color: #22c55e; }
+  </style>
+</head>
+<body>
+  <div class="avatar-wrap" id="avatarWrap" onclick="document.getElementById('fileInput').click()">
+    <img id="preview" style="display:none" alt="">
+    <svg id="placeholder" width="52" height="52" viewBox="0 0 24 24" fill="none"
+         stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+  </div>
+  <p class="hint">点击头像选择图片</p>
+  <input type="file" id="fileInput" accept="image/*" style="display:none">
+  <button class="btn btn-upload" id="uploadBtn" onclick="doUpload()" disabled>确认上传</button>
+  <p class="status" id="status"></p>
+
+  <script>
+    var userid = parseInt(new URLSearchParams(location.search).get('userid'), 10);
+    var BASE = 'https://www.wiidu.com.cn/zx/datainf/mysql/';
+    var MAX_LEN = 7000;
+    var pendingBase64 = null;
+
+    document.getElementById('fileInput').addEventListener('change', function () {
+      var file = this.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) { setStatus('请选择图片文件', 'err'); return; }
+      setStatus('处理中...');
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var b64 = compress(img);
+            if (!b64) { setStatus('图片太复杂无法压缩，请换一张', 'err'); return; }
+            pendingBase64 = b64;
+            var prev = document.getElementById('preview');
+            prev.src = b64;
+            prev.style.display = '';
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('uploadBtn').disabled = false;
+            setStatus('图片已选择，点击上传');
+          } catch (ex) {
+            setStatus('处理失败: ' + ex.message, 'err');
+          }
+        };
+        img.onerror = function () { setStatus('图片读取失败', 'err'); };
+        img.src = e.target.result;
+      };
+      reader.onerror = function () { setStatus('文件读取失败', 'err'); };
+      reader.readAsDataURL(file);
+    });
+
+    function compress(img) {
+      function cut(size) {
+        var c = document.createElement('canvas');
+        c.width = c.height = size;
+        var m = Math.min(img.width, img.height);
+        c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size);
+        return c;
+      }
+      var b64, q = 0.7, canvas = cut(100);
+      do { b64 = canvas.toDataURL('image/jpeg', q); q -= 0.15; } while (b64.length > MAX_LEN && q > 0.1);
+      if (b64.length > MAX_LEN) {
+        canvas = cut(80); q = 0.5;
+        do { b64 = canvas.toDataURL('image/jpeg', q); q -= 0.15; } while (b64.length > MAX_LEN && q > 0.05);
+      }
+      return b64.length <= MAX_LEN ? b64 : null;
+    }
+
+    // 写操作：no-cors 绕过 CORS，请求真实发出执行 SQL，响应不可读
+    // Content-Type 用 application/x-www-form-urlencoded 与 jQuery 格式一致
+    function writeJsp(sql) {
+      return fetch(BASE + 'updateInfo.jsp', {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: JSON.stringify({ sqlstring: [sql] })
+      });
+    }
+
+    // 读操作：getDataListBySql.jsp 有 CORS 头，可正常读取响应，用于验证写入结果
+    // 必须用 text/plain（简单请求，无 preflight）；application/json 会触发 preflight 失败
+    async function readJsp(sql) {
+      var r = await fetch(BASE + 'getDataListBySql.jsp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ sqlstring: [sql] })
+      });
+      return r.json();
+    }
+
+    async function doUpload() {
+      if (!pendingBase64 || !userid) return;
+      document.getElementById('uploadBtn').disabled = true;
+      setStatus('上传中...');
+      try {
+        var now = new Date();
+        var p = function (n) { return String(n).padStart(2, '0'); };
+        var dt = now.getFullYear() + '-' + p(now.getMonth() + 1) + '-' + p(now.getDate()) +
+                 ' ' + p(now.getHours()) + ':' + p(now.getMinutes()) + ':' + p(now.getSeconds());
+
+        // 先 INSERT 新记录（非破坏性），再验证，最后才删旧记录
+        await writeJsp('INSERT INTO test_table_upload_pic (user_id, pic_url, c_time, isDel) VALUES (' +
+          userid + ", '" + pendingBase64 + "', '" + dt + "', 0)");
+
+        // 等待写入后回查确认
+        await new Promise(function(r) { setTimeout(r, 400); });
+        var verify = await readJsp(
+          'SELECT Id FROM test_table_upload_pic WHERE user_id = ' + userid + ' AND isDel = 0 ORDER BY Id DESC LIMIT 1'
+        );
+        if (verify && verify.data && verify.data[0] && verify.data[0].length > 0) {
+          var newId = verify.data[0][0].Id;
+          // INSERT 已确认，再将旧记录软删除（保留新记录）
+          await writeJsp('UPDATE test_table_upload_pic SET isDel = 1 WHERE user_id = ' + userid + ' AND Id <> ' + newId);
+          setStatus('头像更新成功！', 'ok');
+          setTimeout(function () {
+            window.parent.postMessage({ type: 'avatarUpdated', pic_url: pendingBase64 }, '*');
+          }, 500);
+        } else {
+          setStatus('保存失败，请重试', 'err');
+          document.getElementById('uploadBtn').disabled = false;
+        }
+      } catch (e) {
+        setStatus('网络错误: ' + e.message, 'err');
+        document.getElementById('uploadBtn').disabled = false;
+      }
+    }
+
+    function setStatus(msg, cls) {
+      var el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status' + (cls ? ' ' + cls : '');
+    }
+  </script>
+</body>
+</html>
