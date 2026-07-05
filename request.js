@@ -1,4 +1,4 @@
-let HTTP_REQUEST_URL = 'https://www.wiidu.com.cn';
+let HTTP_REQUEST_URL = 'https://www.mock';
 let HEADER = {
     'Content-Type': 'application/json; charset=UTF-8;',
     'Form-type': navigator.userAgent.toLowerCase().indexOf("micromessenger") !== -1 ? 'wechat' : 'h5',
@@ -13,9 +13,9 @@ function baseRequest(url, method, data, {
         header = HEADER;
     return new Promise((reslove, reject) => {
         $.ajax({
-            url: Url + '/zx/datainf/' + url,
+            url: Url + 'mock' + url,
             type: method || 'GET',
-            header: url.indexOf('/updateInfo') >= 0 ? '' : header,
+            header: url.indexOf('/mock') >= 0 ? '' : header,
             // processData: false,
             dataType: 'json',
             data: JSON.stringify(data) || {},
