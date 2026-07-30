@@ -1,0 +1,176 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learning Lab - 视频学习演示</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="#" aria-label="Learning Lab 首页">
+      <span class="brand-mark"><i data-lucide="graduation-cap"></i></span>
+      <span>Learning Lab</span>
+      <small>公开演示版</small>
+    </a>
+    <nav class="top-nav" aria-label="主导航">
+      <button class="nav-item active" data-view="course">课程学习</button>
+      <button class="nav-item" data-view="practice">每日练习</button>
+      <button class="nav-item" data-view="records">学习记录</button>
+    </nav>
+    <div class="header-actions">
+      <span class="sync-status"><i data-lucide="cloud"></i><span id="syncText">本地演示数据</span></span>
+      <button class="icon-button" title="消息通知" aria-label="消息通知">
+        <i data-lucide="bell"></i><span class="notification-dot"></span>
+      </button>
+      <div class="avatar" aria-label="演示用户">ZX</div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <aside class="course-sidebar">
+      <div class="sidebar-heading">
+        <div>
+          <span class="eyebrow">当前专题</span>
+          <h1>前端工程实践</h1>
+        </div>
+        <span class="course-count">4 节</span>
+      </div>
+      <div class="overall-progress">
+        <div class="progress-meta"><span>专题进度</span><strong id="overallPercent">42%</strong></div>
+        <div class="progress-track"><span id="overallBar" style="width:42%"></span></div>
+      </div>
+      <div id="courseList" class="course-list" aria-label="课程章节列表"></div>
+      <div class="privacy-note">
+        <i data-lucide="shield-check"></i>
+        <p>项目使用 Mock API 与演示数据，不连接企业服务。</p>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div id="courseView" class="view active">
+        <div class="video-section">
+          <div class="video-heading">
+            <div>
+              <span id="lessonTag" class="lesson-tag">第 2 节</span>
+              <h2 id="lessonTitle">HTML5 Video 播放器封装</h2>
+              <p id="lessonDescription">实现播放控制、进度同步、倍速切换和断点续播。</p>
+            </div>
+            <div class="lesson-actions">
+              <button id="likeButton" class="action-button" aria-pressed="false">
+                <i data-lucide="thumbs-up"></i><span>赞</span><strong id="likeCount">128</strong>
+              </button>
+              <button id="favoriteButton" class="action-button" aria-pressed="false">
+                <i data-lucide="bookmark"></i><span>收藏</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="player" id="player">
+            <video id="video" preload="metadata" poster="https://storage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg">
+              <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+            </video>
+            <button id="centerPlay" class="center-play" aria-label="播放视频"><i data-lucide="play"></i></button>
+            <div class="player-overlay">
+              <div class="timeline-wrap">
+                <input id="timeline" class="timeline" type="range" min="0" max="100" value="0" aria-label="播放进度">
+                <div class="timeline-labels"><span id="currentTime">00:00</span><span id="duration">00:00</span></div>
+              </div>
+              <div class="player-controls">
+                <button id="playButton" class="player-button" title="播放/暂停" aria-label="播放或暂停"><i data-lucide="play"></i></button>
+                <button id="volumeButton" class="player-button" title="静音" aria-label="静音"><i data-lucide="volume-2"></i></button>
+                <input id="volume" class="volume" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="音量">
+                <span id="saveIndicator" class="save-indicator"><i data-lucide="check"></i>进度已保存</span>
+                <select id="playbackRate" class="rate-select" aria-label="播放速度">
+                  <option value="0.75">0.75x</option>
+                  <option value="1" selected>1.0x</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2">2.0x</option>
+                </select>
+                <button id="fullscreenButton" class="player-button" title="全屏" aria-label="全屏"><i data-lucide="maximize"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <div id="resumeBanner" class="resume-banner" hidden>
+            <i data-lucide="history"></i>
+            <span>检测到上次观看位置 <strong id="resumeTime">00:00</strong></span>
+            <button id="resumeButton">继续观看</button>
+            <button id="restartButton" class="text-button">从头开始</button>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <section class="content-panel">
+            <div class="section-heading">
+              <div><span class="eyebrow">课程讨论</span><h3>评论与笔记</h3></div>
+              <span id="commentCount" class="muted">3 条</span>
+            </div>
+            <form id="commentForm" class="comment-form">
+              <textarea id="commentInput" maxlength="180" placeholder="记录学习问题或心得..." aria-label="评论内容"></textarea>
+              <div class="comment-form-footer">
+                <span><strong id="commentLength">0</strong>/180</span>
+                <button class="primary-button" type="submit"><i data-lucide="send"></i>发布</button>
+              </div>
+            </form>
+            <div id="commentList" class="comment-list"></div>
+          </section>
+
+          <aside class="insight-panel">
+            <div class="section-heading">
+              <div><span class="eyebrow">本周数据</span><h3>学习概览</h3></div>
+              <i data-lucide="bar-chart-3"></i>
+            </div>
+            <div class="metric-grid">
+              <div><strong id="studyMinutes">126</strong><span>学习分钟</span></div>
+              <div><strong>8</strong><span>完成章节</span></div>
+              <div><strong>87%</strong><span>练习正确率</span></div>
+              <div><strong>5</strong><span>连续学习天</span></div>
+            </div>
+            <div class="weekly-bars" aria-label="一周学习时长">
+              <div><span style="height:36%"></span><small>一</small></div>
+              <div><span style="height:68%"></span><small>二</small></div>
+              <div><span style="height:44%"></span><small>三</small></div>
+              <div><span style="height:82%"></span><small>四</small></div>
+              <div><span style="height:58%"></span><small>五</small></div>
+              <div><span style="height:92%"></span><small>六</small></div>
+              <div><span style="height:52%"></span><small>日</small></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div id="practiceView" class="view">
+        <section class="practice-layout">
+          <div class="practice-header">
+            <span class="eyebrow">每日一练 · 3 题</span>
+            <h2>巩固视频学习进度设计</h2>
+            <p>演示题目状态、答案缓存与完成进度。</p>
+          </div>
+          <div id="quizCard" class="quiz-card"></div>
+        </section>
+      </div>
+
+      <div id="recordsView" class="view">
+        <section class="records-layout">
+          <div class="section-heading records-heading">
+            <div><span class="eyebrow">学习轨迹</span><h2>最近记录</h2></div>
+            <button id="clearRecords" class="secondary-button"><i data-lucide="trash-2"></i>清空演示记录</button>
+          </div>
+          <div id="recordList" class="record-list"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="mock-api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
